@@ -21,8 +21,10 @@ seconds_to_min = seconds/60
 word_count = 0
 character_count = 0
 
-word_per_minute = word_count/seconds_to_min
-character_per_min = character_count/seconds_to_min
+time = None
+
+# word_per_minute = word_count/seconds_to_min
+# character_per_min = character_count/seconds_to_min
 
 
 
@@ -41,6 +43,8 @@ list_of_words = word_generator.generate_list()
 copy_list = list_of_words.copy()
 
 word_to_type = ""
+correct_char = ""
+all_char = ""
 
 
 for words in list_of_words:
@@ -54,33 +58,49 @@ formatted_score = score.strip()
 
 #The trick is to always compare first word in the list
 def validator(*args):
+    global list_of_words, typed_word_list, correct_char, all_char
+    """Start Timer under a particular condition"""
+    if len(all_char) == 0:
+        timer(seconds)
+
+
     #2
-    global list_of_words
-    word_to_check = list_of_words[0]
 
-    index = len(user_entry.get()) - 1
-    start = "1.0"
-    pos = text_t.search(word_to_check, start, stopindex=END)
-
-    word_length = len(word_to_check) - 1
-    pos_list = pos.split(".")
-    char = int(pos_list[1]) + index
-    char_no = f"{pos_list[0]}.0 + {char}c"
+    if len(list_of_words) != 0:
+        # print(len(list_of_words))
+        word_to_check = list_of_words[0]
 
 
-
-
-    if user_entry.get()[-1] == word_to_check[index]:
-        #Count correct Character Here
-        # print(char_no)
-        text_t.tag_add("blue", str(char_no))
+        index = len(user_entry.get()) - 1
+        start = "1.0"
         pos = text_t.search(word_to_check, start, stopindex=END)
-        print(pos)
-        print(text_t.index(pos))
-        #make character and line number truly dynamic
+
+        word_length = len(word_to_check) - 1
+        pos_list = pos.split(".")
+        char = int(pos_list[1]) + index
+        char_no = f"{pos_list[0]}.0 + {char}c"
+
+
+        current_word = user_entry.get()[-1]
+        #If the last word in user entry is equals same word character in word_to_check
+        if current_word == word_to_check[index]:
+            #Count correct Character Here
+            # print(char_no)
+            text_t.tag_add("blue", str(char_no))
+            pos = text_t.search(word_to_check, start, stopindex=END)
+            correct_char += current_word
+            # print(pos)
+            # print(text_t.index(pos))
+            #make character and line number truly dynamic
+        else:
+            # print("False")
+            text_t.tag_add("red", str(char_no))
+
+        all_char += current_word
     else:
-        print("False")
-        text_t.tag_add("red", str(char_no))
+        print("game Over")
+        print(f"You got {len(typed_word_list)} words correct")
+        print(f"You got {len(correct_char)} words correct")
 
 
     #Recompile the textarea.
@@ -94,27 +114,55 @@ def update_text(event):
     word = list_of_words[0]
     if user_input == word:
         typed_word_list.append(user_input)
-    print(typed_word_list)
+    # print(typed_word_list)
     #Removes first word in list
     list_of_words.pop(0)
+    #disables the trace_adder function, so we can set the entry to an empty string without triggering the trace_adder function.
     entry.trace_remove("write", trace_adder)
     entry.set("")
+    #reactivates the trace adder function.
     globals()["trace_adder"] = entry.trace_add("write", validator)
 
+def timer(count):
+    global time, seconds
+
+    # print(count)
+    if count == 0:
+        print("End")
+        print(len(typed_word_list))
+        window.after_cancel(time)
+        user_entry.state(["disabled"])
+
+        time_text.itemconfig(time_count, text=0)
+    else:
+        time = window.after(1000, timer, count-1)
+        time_text.itemconfig(time_count, text=count)
+
+        #records words and characters per minute.
+        get_word_and_character_per_min(count, typed_word_list, wpm, wpm_score)
+        get_word_and_character_per_min(count, all_char, cpm, cpm_score)
+
+
+
+
+
+def get_word_and_character_per_min(seco, list_or_string, canvas_item, canvas_var):
+    global typed_word_list
+
+    amount_of_c_words = len(list_or_string)
+    sec = 60 - seco
+    if sec == 0:
+        pass
+    else:
+        sec_to_min = sec/60
+        word_p_min = round(amount_of_c_words/sec_to_min)
+        canvas_item.itemconfig(canvas_var, text=word_p_min)
 
 
 
 
 
 
-
-
-
-
-
-
-def timer():
-    pass
 
 
 
@@ -179,7 +227,7 @@ cpm_label.grid(column=2, row=0, sticky="ew")
 
 cpm = Canvas(frame_1, width=50, height=60, background=COLOR_1, highlightthickness=0)
 cpm.grid(column=3, row=0)
-cpm.create_text(10, 30, text="0", font=("Calibri", 13))
+cpm_score = cpm.create_text(10, 30, text="0", font=("Calibri", 13))
 
 #-------#
 
@@ -189,16 +237,16 @@ wpm_label.grid(column=4, row=0, sticky="ew", padx=(90,0))
 
 wpm = Canvas(frame_1, width=50, height=60, background=COLOR_1, highlightthickness=0)
 wpm.grid(column=5, row=0)
-wpm.create_text(10, 30, text="0", font=("Calibri", 13))
+wpm_score = wpm.create_text(10, 30, text="0", font=("Calibri", 13))
 #-------#
 
 #--------#
 time_left_label = ttk.Label(frame_1, text="Time left:", font=("Calibri", 13), background=COLOR_1)
 time_left_label.grid(column=6, row=0, sticky="w", padx=(30, 0))
 
-time = Canvas(frame_1, width=50, height=60, background=COLOR_1, highlightthickness=0)
-time.grid(column=7, row=0, padx=(0, 0))
-time.create_text(10, 30, text="60", font=("Calibri", 13))
+time_text = Canvas(frame_1, width=50, height=60, background=COLOR_1, highlightthickness=0)
+time_text.grid(column=7, row=0, padx=(0, 0))
+time_count = time_text.create_text(10, 30, text="60", font=("Calibri", 13))
 #--------#
 
 
