@@ -85,15 +85,11 @@ def validator(*args):
         #If the last word in user entry is equals same word character in word_to_check
         if current_word == word_to_check[index]:
             #Count correct Character Here
-            # print(char_no)
             text_t.tag_add("blue", str(char_no))
             pos = text_t.search(word_to_check, start, stopindex=END)
             correct_char += current_word
-            # print(pos)
-            # print(text_t.index(pos))
             #make character and line number truly dynamic
         else:
-            # print("False")
             text_t.tag_add("red", str(char_no))
 
         all_char += current_word
@@ -114,7 +110,7 @@ def update_text(event):
     word = list_of_words[0]
     if user_input == word:
         typed_word_list.append(user_input)
-    # print(typed_word_list)
+
     #Removes first word in list
     list_of_words.pop(0)
     #disables the trace_adder function, so we can set the entry to an empty string without triggering the trace_adder function.
