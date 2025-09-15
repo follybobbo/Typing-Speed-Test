@@ -22,6 +22,7 @@ word_count = 0
 character_count = 0
 
 time = None
+check_length_wrapper = None
 
 # word_per_minute = word_count/seconds_to_min
 # character_per_min = character_count/seconds_to_min
@@ -47,9 +48,13 @@ correct_char = ""
 all_char = ""
 
 
+
+
 for words in list_of_words:
     word_to_type += f"{words} "
 
+#set initial value of max val so user will not be able to type more than length of expected word
+max_val = len(list_of_words[0])
 
 
 formatted_score = score.strip()
@@ -58,26 +63,33 @@ formatted_score = score.strip()
 
 #The trick is to always compare first word in the list
 def validator(*args):
-    global list_of_words, typed_word_list, correct_char, all_char
+    global list_of_words, typed_word_list, correct_char, all_char, check_length_wrapper
     """Start Timer under a particular condition"""
     if len(all_char) == 0:
         timer(seconds)
 
-
+  # Do something when user input character longer then whats expected
     #2
-
+    #Execute function, so far we still have words in our list of words
     if len(list_of_words) != 0:
         # print(len(list_of_words))
         word_to_check = list_of_words[0]
-
+        # max_val = len(word_to_check)
+        print(word_to_check)
+        # check_length_wrapper = (window.register(lambda P: validate_entry_length(P, max_val)), "%P")
 
         index = len(user_entry.get()) - 1
         start = "1.0"
+
+        #gets position of the current word to check in the text widget, the pos always returns the line no and char no
+        #in format line.char(e.g 1.0) Note it gives the position of the whole word, so we have to get the position of
+        #each character ourselves, hence we add the index no to get the particular character
         pos = text_t.search(word_to_check, start, stopindex=END)
 
         word_length = len(word_to_check) - 1
         pos_list = pos.split(".")
         char = int(pos_list[1]) + index
+
         char_no = f"{pos_list[0]}.0 + {char}c"
 
 
@@ -94,12 +106,24 @@ def validator(*args):
 
         all_char += current_word
     else:
+        #pop ups.
         print("game Over")
         print(f"You got {len(typed_word_list)} words correct")
         print(f"You got {len(correct_char)} words correct")
 
 
     #Recompile the textarea.
+
+def validate_entry_length(new_value, max_len):
+    global word_to_type, max_val
+    #subsequent max_val is updated from inside  validate_entry_length since it runs before user input is registered.
+    word_to_type = list_of_words[0]
+    max_val = len(word_to_type)
+    print(f"word to type {word_to_type}")
+    if len(new_value) <= max_len:
+        return True
+    return False
+
 
 
 
@@ -137,6 +161,9 @@ def timer(count):
         #records words and characters per minute.
         get_word_and_character_per_min(count, typed_word_list, wpm, wpm_score)
         get_word_and_character_per_min(count, all_char, cpm, cpm_score)
+
+        #write best score to file.
+        # best_score.write_best_score()
 
 
 
@@ -185,6 +212,9 @@ def get_word_and_character_per_min(seco, list_or_string, canvas_item, canvas_var
 
 
 window = Tk()
+
+
+
 window.title("Typing Speed Calculator")
 window.wm_maxsize(width=700, height=700)
 window.configure(height=700, width=700)
@@ -274,14 +304,16 @@ text_t.grid(column=0, row=0)
 frame_3 = Frame(window, height=100, width=700, background=COLOR_1)
 frame_3.grid(column=0, row=2)
 frame_3.grid_propagate(False)
+check_length_wrapper = (window.register(lambda P: validate_entry_length(P, max_val)), "%P")
 
-user_entry = ttk.Entry(frame_3, textvariable=entry, width=20, font=("Calibri", 20), justify="center")
+user_entry = ttk.Entry(frame_3, textvariable=entry, width=20, font=("Calibri", 20), justify="center", validate="key", validatecommand=check_length_wrapper)
 user_entry.bind("<Return>", update_text)
 
 
 user_entry.grid(column=0, row=0, padx=(200, 0), pady=(30, 0))
 
 trace_adder = entry.trace_add("write", validator)
+
 
 
 
