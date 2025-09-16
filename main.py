@@ -1,10 +1,5 @@
-import tkinter
-
-from regex import search
-from wordfreq import top_n_list, random_words
-from english_words import get_english_words_set
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import tkinter.font as tkfont
 from word import WordGenerator
 from bestscore import BestScore
@@ -24,8 +19,6 @@ character_count = 0
 time = None
 check_length_wrapper = None
 
-# word_per_minute = word_count/seconds_to_min
-# character_per_min = character_count/seconds_to_min
 
 
 
@@ -38,7 +31,7 @@ word_generator = WordGenerator()
 
 best_score = BestScore()
 score = best_score.read_best_score()[-1]
-# best_score.write_best_score(score)
+
 
 list_of_words = word_generator.generate_list()
 copy_list = list_of_words.copy()
@@ -110,13 +103,12 @@ def validator(*args):
             text_t.tag_add("red", str(char_no))
         all_char += current_word
     else:
-        #pop ups.
-        print("game Over")
-        print(f"You got {len(typed_word_list)} words correct")
-        print(f"You got {len(correct_char)} words correct")
+        messagebox.showinfo(message=f"Hurray You Finished typing all the words.\ncorrect words: {len(typed_word_list)}\n"
+                                    f"correct character: {len(correct_char)}")
 
 
-    #Recompile the textarea.
+
+
 
 #This Function validates the user entry and ensures the user cannot type characters longer than the allowable number of
 #characters
@@ -125,7 +117,7 @@ def validate_entry_length(new_value, max_len):
     #subsequent max_val is updated from inside  validate_entry_length since it runs before user input is registered.
     word_to_type = list_of_words[0]
     max_val = len(word_to_type)  #This dynamically defines the maximum allowable words the user can typo in.
-    # print(f"word to type {word_to_type}")
+
     if len(new_value) <= max_len:
         return True
     return False
@@ -155,14 +147,15 @@ def update_text(event):
 def timer(count):
     global time, seconds
 
-    if count == 0:
+    if count < 0:
         #pop up
-        print("End")
-        print(len(typed_word_list))
+
         window.after_cancel(time)
         user_entry.state(["disabled"])
-
-        time_text.itemconfig(time_count, text=0)
+        messagebox.showinfo(message=f"Time is up")
+        record_score = len(typed_word_list)
+        #writes the best score
+        best_score.write_best_score(record_score)
     else:
         time = window.after(1000, timer, count-1)
         time_text.itemconfig(time_count, text=count)
@@ -298,14 +291,9 @@ text_t.tag_configure("red", foreground="red")
 text_t.tag_configure("blue", foreground="blue")
 
 text_t.insert("end", word_to_type)
+text_t["state"] = "disabled"
 text_t.grid(column=0, row=0)
 
-# canvas_text = Canvas(frame_2, width=700, height=550)
-# word_on_canvas = canvas_text.create_text(355, 275,
-#                         text=f"{word_to_type}",
-#                         font=("Calibri", 20),
-#                         width=400)
-# canvas_text.grid(column=0, row=0)
 
 """USER ENTRY"""
 #-------------------------------Frame3----------------------#
