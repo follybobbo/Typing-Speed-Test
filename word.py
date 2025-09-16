@@ -6,7 +6,7 @@ class WordGenerator:
 
 
     def generate_list(self):
-        word = random_words(lang='en', wordlist='best', nwords=50, bits_per_word=12)
+        word = random_words(lang='en', wordlist='best', nwords=250, bits_per_word=12)
 
         return word.split()
 

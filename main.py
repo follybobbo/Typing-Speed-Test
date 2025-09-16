@@ -8,7 +8,7 @@ from tkinter import ttk
 import tkinter.font as tkfont
 from word import WordGenerator
 from bestscore import BestScore
-import re
+
 
 COLOR_1 = "#E5E0D8"
 COLOR_2 = "#F8F8F8"
@@ -61,49 +61,53 @@ formatted_score = score.strip()
 
 #--------------------- Functions Block Begin-----------------------------#
 
-#The trick is to always compare first word in the list
+"""TODO: Track when a user deletes and then types, update color in real time"""
 def validator(*args):
     global list_of_words, typed_word_list, correct_char, all_char, check_length_wrapper
-    """Start Timer under a particular condition"""
     if len(all_char) == 0:
+        #since the validator function runs after every user entry, the conditional block above ensures the timer starts
+        #on the first user entry.
         timer(seconds)
 
   # Do something when user input character longer then whats expected
     #2
     #Execute function, so far we still have words in our list of words
     if len(list_of_words) != 0:
-        # print(len(list_of_words))
+        #get first word rom the list, which we will use for comparison,
         word_to_check = list_of_words[0]
-        # max_val = len(word_to_check)
-        print(word_to_check)
-        # check_length_wrapper = (window.register(lambda P: validate_entry_length(P, max_val)), "%P")
 
+        #character index is always the last character in word the user has already typed in
         index = len(user_entry.get()) - 1
-        start = "1.0"
+
 
         #gets position of the current word to check in the text widget, the pos always returns the line no and char no
         #in format line.char(e.g 1.0) Note it gives the position of the whole word, so we have to get the position of
         #each character ourselves, hence we add the index no to get the particular character
+        start = "1.0"
         pos = text_t.search(word_to_check, start, stopindex=END)
 
         word_length = len(word_to_check) - 1
+        #split the position into line and character cause, pos will always return in format line.character eg 1.7
         pos_list = pos.split(".")
+
+        #cause pos returns the position of the first letter of the current word we are trying to spell in the text widget
+        #we can use the index to then get the current character we are trying bto type in the text widget
         char = int(pos_list[1]) + index
 
+        #char_no gives us the current position of the character we are trying to spell or type in at any point in time
         char_no = f"{pos_list[0]}.0 + {char}c"
 
 
         current_word = user_entry.get()[-1]
-        #If the last word in user entry is equals same word character in word_to_check
+        #If the last word in user entry is equals same word character in word_to_check, color it blue
         if current_word == word_to_check[index]:
-            #Count correct Character Here
             text_t.tag_add("blue", str(char_no))
-            pos = text_t.search(word_to_check, start, stopindex=END)
-            correct_char += current_word
+
+            correct_char += current_word #keeps track of correct character entered
             #make character and line number truly dynamic
         else:
+            #color it red
             text_t.tag_add("red", str(char_no))
-
         all_char += current_word
     else:
         #pop ups.
@@ -114,12 +118,14 @@ def validator(*args):
 
     #Recompile the textarea.
 
+#This Function validates the user entry and ensures the user cannot type characters longer than the allowable number of
+#characters
 def validate_entry_length(new_value, max_len):
     global word_to_type, max_val
     #subsequent max_val is updated from inside  validate_entry_length since it runs before user input is registered.
     word_to_type = list_of_words[0]
-    max_val = len(word_to_type)
-    print(f"word to type {word_to_type}")
+    max_val = len(word_to_type)  #This dynamically defines the maximum allowable words the user can typo in.
+    # print(f"word to type {word_to_type}")
     if len(new_value) <= max_len:
         return True
     return False
@@ -127,7 +133,8 @@ def validate_entry_length(new_value, max_len):
 
 
 
-
+#This function ensures that we always work with the first word in the list_of_words list. and it keeps track of the words
+#That are typed in correctly by appending them in list typed_word_list
 def update_text(event):
     global entry
     user_input = user_entry.get()
@@ -139,15 +146,17 @@ def update_text(event):
     list_of_words.pop(0)
     #disables the trace_adder function, so we can set the entry to an empty string without triggering the trace_adder function.
     entry.trace_remove("write", trace_adder)
+    #sets the content of entry to ""...Nothing
     entry.set("")
-    #reactivates the trace adder function.
+    #reactivates the trace adder function, so we can track every entry made into the Entry widget.
     globals()["trace_adder"] = entry.trace_add("write", validator)
+
 
 def timer(count):
     global time, seconds
 
-    # print(count)
     if count == 0:
+        #pop up
         print("End")
         print(len(typed_word_list))
         window.after_cancel(time)
@@ -163,12 +172,12 @@ def timer(count):
         get_word_and_character_per_min(count, all_char, cpm, cpm_score)
 
         #write best score to file.
-        # best_score.write_best_score()
 
 
 
 
 
+#This function calculates character or words typed per minute
 def get_word_and_character_per_min(seco, list_or_string, canvas_item, canvas_var):
     global typed_word_list
 
@@ -234,8 +243,7 @@ frame_1.grid(column=0, row=0, sticky="ew")
 
 #Prevent shrinking of frame to label size
 frame_1.grid_propagate(False)
-# frame_1.columnconfigure(0, weight=0)
-# frame_1.columnconfigure(1, weight=0)
+
 
 
 #-------#
